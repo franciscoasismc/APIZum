@@ -1,0 +1,88 @@
+# ══════════════════════════════════════════════════════════════════
+# Orquestación de servicios de APIZum
+# ══════════════════════════════════════════════════════════════════
+#
+#   db       → Base de datos MySQL 8
+#   backend  → API REST Spring Boot (Java 17)
+#   frontend → Aplicación Vue 3 servida por Nginx
+#
+#   docker compose up --build          # primera vez o tras cambios
+#   docker compose up -d               # en segundo plano
+#   docker compose down                # parar y eliminar contenedores
+#   docker compose down -v             # también elimina el volumen MySQL
+#
+# ══════════════════════════════════════════════════════════════════
+
+services:
+
+  # Base de datos MySQL
+  db:
+    image: mysql:8.0
+    container_name: apizum-db
+    restart: unless-stopped
+    environment:
+      # Contraseña del usuario root de MySQL
+      MYSQL_ROOT_PASSWORD: rootpassword
+      # Base de datos que se crea automáticamente al arrancar
+      MYSQL_DATABASE: apizumbd
+    volumes:
+      # Volumen persistente (los datos sobreviven a reinicios del contenedor)
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      # El backend no arranca hasta que MySQL acepta conexiones
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-prootpassword"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    networks:
+      - apizum-net
+
+
+  # Backend Spring Boot
+  backend:
+    build:
+      context: ./APIZum/APIZum   # directorio con el Dockerfile del backend
+    container_name: apizum-backend
+    restart: unless-stopped
+    environment:
+      # Conexión a MySQL
+      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/apizumbd?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: rootpassword
+      # Hibernate crea/actualiza las tablas automáticamente
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+    depends_on:
+      db:
+        condition: service_healthy   # espera a que MySQL esté listo
+    networks:
+      - apizum-net
+
+
+  # Frontend Vue + Nginx
+  frontend:
+    build:
+      context: ./APIZumCliente     # directorio con el Dockerfile del frontend
+    container_name: apizum-frontend
+    restart: unless-stopped
+    ports:
+      # Mapea el puerto 80 del contenedor al puerto 80 del host.
+      # La aplicación será accesible en http://localhost
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - apizum-net
+
+
+# Volúmenes
+volumes:
+  # Almacena los datos de MySQL fuera del contenedor
+  mysql_data:
+
+
+# Redes
+networks:
+  # Red interna compartida por los tres servicios.
+  apizum-net:
+    driver: bridge

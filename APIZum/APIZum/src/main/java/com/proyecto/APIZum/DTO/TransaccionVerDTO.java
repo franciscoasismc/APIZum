@@ -1,0 +1,43 @@
+package com.proyecto.APIZum.DTO;
+
+import com.proyecto.APIZum.model.Cuenta;
+
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+
+public class TransaccionVerDTO {
+    private Long idTransaccion;
+    private BigDecimal cantidad;
+    private String descripcion;
+    private LocalDateTime fecha;
+    private Cuenta cuentaOrigen;
+    private Cuenta cuentaDestino;
+
+    public TransaccionVerDTO(Long idTransaccion, BigDecimal cantidad, String descripcion,
+                              LocalDateTime fecha, Cuenta cuentaOrigen, Cuenta cuentaDestino) {
+        this.idTransaccion = idTransaccion;
+        this.cantidad = cantidad;
+        this.descripcion = descripcion;
+        this.fecha = fecha;
+        this.cuentaOrigen = cuentaOrigen;
+        this.cuentaDestino = cuentaDestino;
+    }
+
+    public Long getIdTransaccion(){ return idTransaccion; }
+    public void setIdTransaccion(Long id){ this.idTransaccion = id; }
+
+    public BigDecimal getCantidad(){ return cantidad; }
+    public void setCantidad(BigDecimal cantidad){ this.cantidad = cantidad; }
+
+    public String getDescripcion(){ return descripcion; }
+    public void setDescripcion(String descripcion){ this.descripcion = descripcion; }
+
+    public LocalDateTime getFecha(){ return fecha; }
+    public void setFecha(LocalDateTime fecha){ this.fecha = fecha; }
+
+    public Cuenta getCuentaOrigen(){ return cuentaOrigen; }
+    public void setCuentaOrigen(Cuenta cuentaOrigen){ this.cuentaOrigen = cuentaOrigen; }
+
+    public Cuenta getCuentaDestino(){ return cuentaDestino; }
+    public void setCuentaDestino(Cuenta cuentaDestino){ this.cuentaDestino = cuentaDestino; }
+}

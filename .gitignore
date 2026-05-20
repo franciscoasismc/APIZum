@@ -1,0 +1,37 @@
+# ══════════════════════════════════════════════════════════════════
+# .gitignore — Monorepo APIZum (backend + frontend)
+# ══════════════════════════════════════════════════════════════════
+
+# ── Java / Gradle (backend) ────────────────────────────────────────
+APIZum/APIZum/build/
+APIZum/APIZum/.gradle/
+APIZum/APIZum/out/
+*.class
+*.jar
+*.war
+*.ear
+
+# ── Node / pnpm (frontend) ─────────────────────────────────────────
+APIZumCliente/node_modules/
+APIZumCliente/dist/
+APIZumCliente/.vite/
+
+# ── IntelliJ IDEA ─────────────────────────────────────────────────
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# ── Sistema operativo ─────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ── Logs ──────────────────────────────────────────────────────────
+*.log
+logs/
+
+# ── Variables de entorno (nunca subir credenciales) ───────────────
+.env
+.env.local
+.env.*.local

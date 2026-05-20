@@ -1,0 +1,69 @@
+# ══════════════════════════════════════════════════════════════════
+# Despliegue desde Docker Hub
+# ══════════════════════════════════════════════════════════════════
+# Uso (en cualquier máquina con Docker instalado):
+#   docker compose -f docker-compose.prod.yml up -d
+#   docker compose -f docker-compose.prod.yml down
+#
+# ══════════════════════════════════════════════════════════════════
+
+services:
+
+  # Base de datos MySQL
+  db:
+    image: mysql:8.0
+    container_name: apizum-db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: apizumbd
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-prootpassword"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    networks:
+      - apizum-net
+
+
+  # Backend Spring Boot
+  backend:
+    # Imagen publicada en Docker Hub
+    image: fmuncar/apizum-backend:latest
+    container_name: apizum-backend
+    restart: unless-stopped
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/apizumbd?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: rootpassword
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - apizum-net
+
+
+  # Frontend Vue + Nginx
+  frontend:
+    # Imagen publicada en Docker Hub
+    image: fmuncar/apizum-frontend:latest
+    container_name: apizum-frontend
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - apizum-net
+
+
+volumes:
+  mysql_data:
+
+networks:
+  apizum-net:
+    driver: bridge

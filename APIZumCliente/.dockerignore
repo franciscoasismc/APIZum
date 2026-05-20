@@ -1,0 +1,22 @@
+# Excluye archivos innecesarios del contexto de build de Docker.
+
+# Dependencias instaladas localmente
+node_modules/
+
+# Build local
+dist/
+
+# Archivos de configuración del IDE
+.idea/
+*.iml
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
+
+# Git
+.git/
+.gitignore
+
+# Logs
+*.log
