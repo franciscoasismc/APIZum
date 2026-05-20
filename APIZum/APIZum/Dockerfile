@@ -16,17 +16,11 @@ FROM gradle:8.14-jdk17 AS build
 
 WORKDIR /app
 
-# Copiamos primero los descriptores de dependencias para aprovechar
-# la caché de Docker: si no cambian, no se re-descargan las librerías.
-COPY build.gradle.kts settings.gradle.kts ./
-COPY gradle ./gradle
-
-# Descargamos dependencias sin compilar el código fuente todavía
-RUN gradle dependencies --no-daemon || true
-
-# Copiamos el resto del código fuente y construimos el JAR ejecutable
-COPY src ./src
-RUN gradle bootJar --no-daemon
+# Copiamos todo el código fuente y construimos el JAR ejecutable.
+# --no-daemon evita el proceso en segundo plano de Gradle.
+# JAVA_OPTS limita la memoria del compilador para entornos con poca RAM.
+COPY . .
+RUN JAVA_OPTS="-Xmx512m" gradle bootJar --no-daemon
 
 
 # Etapa 2: Imagen de ejecución
