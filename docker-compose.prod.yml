@@ -32,7 +32,7 @@ services:
   # Backend Spring Boot
   backend:
     # Imagen publicada en Docker Hub
-    image: fmuncar/apizum-backend:latest
+    image: fmuncar/apizum-backend:v2
     container_name: apizum-backend
     restart: unless-stopped
     environment:
@@ -50,7 +50,7 @@ services:
   # Frontend Vue + Nginx
   frontend:
     # Imagen publicada en Docker Hub
-    image: fmuncar/apizum-frontend:latest
+    image: fmuncar/apizum-frontend:local
     container_name: apizum-frontend
     restart: unless-stopped
     ports:

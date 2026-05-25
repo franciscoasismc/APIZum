@@ -6,6 +6,7 @@ import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jose.jwk.source.ImmutableJWKSet;
 import com.nimbusds.jose.jwk.source.JWKSource;
 import com.nimbusds.jose.proc.SecurityContext;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -23,6 +24,11 @@ import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import java.util.List;
 
 // =========================
 //  Orquesta la seguridad
@@ -30,6 +36,9 @@ import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
 public class SecurityConfig {
+
+    @Value("${cors.allowed-origins:http://localhost:5173}")
+    private String allowedOrigins;
 
     private final RSAKeyProperties rsaKeys;
     private final CustomAccessDeniedHandler accessDeniedHandler;
@@ -41,6 +50,20 @@ public class SecurityConfig {
         this.rsaKeys = rsaKeys;
         this.accessDeniedHandler = accessDeniedHandler;
         this.authenticationEntryPoint = authenticationEntryPoint;
+    }
+
+
+    // Configuración CORS: permite peticiones del frontend
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration config = new CorsConfiguration();
+        config.setAllowedOrigins(List.of(allowedOrigins.split(",")));
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        config.setAllowedHeaders(List.of("*"));
+        config.setAllowCredentials(true);
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", config);
+        return source;
     }
 
 
@@ -80,7 +103,12 @@ public class SecurityConfig {
         return http
                 // Sin CSRF: API stateless con JWT, no usa cookies de sesión
                 .csrf(AbstractHttpConfigurer::disable)
+                // CORS: permite peticiones desde el frontend
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .authorizeHttpRequests(auth -> auth
+
+                        // Preflight CORS: OPTIONS siempre permitido
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
                         // Públicos
                         .requestMatchers(HttpMethod.POST, "/auth/login").permitAll()

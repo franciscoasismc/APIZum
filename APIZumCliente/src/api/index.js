@@ -12,7 +12,9 @@ import axios from 'axios'
 
 /* Instancia de axios configurada con la URL base de la API.
   Todas las funciones exportadas usan esta instancia. */
-const api = axios.create({ baseURL: '/api' })
+// En producción usa la URL del backend de Railway (variable de entorno VITE_API_URL).
+// En desarrollo usa el proxy de Vite (/api → localhost:8081).
+const api = axios.create({ baseURL: import.meta.env.VITE_API_URL || '/api' })
 
 /* Interceptor de peticiones: añade el token JWT al header Authorization
   si existe en el localStorage. El servidor lo usa para identificar
