@@ -120,15 +120,14 @@ class TransaccionServiceTest {
     @Test
     @DisplayName("Cuenta destino inexistente lanza NoEncontradoException")
     void transferencia_cuentaDestinoInexistente() {
-        String ibanInexistente = "ES8200012345678901234567";
-
+        // IBAN_DESTINO pasa la validación IBAN pero lo mockeamos como no existente en BD
         when(transaccionRepository.sumCantidadByOrigenAndFechaBetween(
                 eq(IBAN_ORIGEN), any(), any())).thenReturn(BigDecimal.ZERO);
         when(cuentaRepository.findByIdWithLock(IBAN_ORIGEN)).thenReturn(Optional.of(cuentaOrigen));
-        when(cuentaRepository.findByIdWithLock(ibanInexistente)).thenReturn(Optional.empty());
+        when(cuentaRepository.findByIdWithLock(IBAN_DESTINO)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() ->
-                transaccionService.crearTransaccion(auth, ibanInexistente, new BigDecimal("10.00"), null))
+                transaccionService.crearTransaccion(auth, IBAN_DESTINO, new BigDecimal("10.00"), null))
                 .isInstanceOf(NoEncontradoException.class)
                 .hasMessageContaining("Cuenta destino no encontrada");
     }
