@@ -4,11 +4,13 @@ package com.proyecto.APIZum.controller;
 //  Gestiona las peticiones HTTP
 // ================================
 
-import com.proyecto.APIZum.DTO.AdminActualizarDTO;
-import com.proyecto.APIZum.DTO.UsuarioLoginDTO;
-import com.proyecto.APIZum.DTO.UsuarioPerfilDTO;
-import com.proyecto.APIZum.DTO.UsuarioRespuestaDTO;
+import com.proyecto.APIZum.DTO.*;
 import com.proyecto.APIZum.service.UsuarioService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -16,6 +18,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 
+@Tag(name = "Usuarios & Auth", description = "Registro, login, perfil y gestión de usuarios (ADMIN)")
 @RestController
 public class UsuarioController {
 
@@ -30,7 +33,7 @@ public class UsuarioController {
     // USER
     // ======================
 
-    // Devuelve el perfil del usuario autenticado (incluye rol y cuenta, sin password).
+    // Devuelve el perfil del usuario autenticado.
     @GetMapping("/usuarios/")
     public ResponseEntity<UsuarioPerfilDTO> verPerfil(Authentication auth) {
         return ResponseEntity.ok(usuarioService.verPerfil(auth));
@@ -44,18 +47,31 @@ public class UsuarioController {
         return ResponseEntity.ok(usuarioService.actualizarPerfil(auth, dto));
     }
 
+    // Busca un destinatario por email (para nueva transacción / añadir contacto).
+    @GetMapping("/usuarios/buscar")
+    public ResponseEntity<UsuarioResumenDTO> buscarPorEmail(@RequestParam String email) {
+        return ResponseEntity.ok(usuarioService.buscarPorEmail(email));
+    }
+
 
     // ======================
     // ADMIN
     // ======================
 
-    //Devuelve los datos de cualquier usuario (incluye rol y cuenta, sin password).
+    // Lista todos los usuarios activos con paginación.
+    @GetMapping("/usuarios")
+    public ResponseEntity<Page<UsuarioPerfilDTO>> listarUsuarios(
+            @PageableDefault(size = 10, sort = "username") Pageable pageable) {
+        return ResponseEntity.ok(usuarioService.listarUsuarios(pageable));
+    }
+
+    // Devuelve los datos de cualquier usuario.
     @GetMapping("/usuarios/{username}")
     public ResponseEntity<UsuarioPerfilDTO> verUsuario(@PathVariable String username) {
         return ResponseEntity.ok(usuarioService.verUsuario(username));
     }
 
-    //Actualiza cualquier usuario. Permite cambiar el rol (USER/ADMIN).
+    // Actualiza cualquier usuario (permite cambiar el rol).
     @PutMapping("/usuarios/{username}")
     public ResponseEntity<UsuarioPerfilDTO> actualizarUsuario(
             @PathVariable String username,
@@ -63,7 +79,7 @@ public class UsuarioController {
         return ResponseEntity.ok(usuarioService.actualizarUsuario(username, dto));
     }
 
-    // Elimina un usuario y su cuenta asociada (relación fuerte, cascade).
+    // Soft delete: desactiva el usuario sin eliminar su historial financiero.
     @DeleteMapping("/usuarios/{username}")
     public ResponseEntity<Void> eliminarUsuario(@PathVariable String username) {
         usuarioService.eliminarUsuario(username);
@@ -75,22 +91,23 @@ public class UsuarioController {
     // AUTH
     // ======================
 
-    // Registra un nuevo usuario sin cuenta. Rol por defecto: USER.
+    // Registra un nuevo usuario. Devuelve un JWT temporal para el paso 2 (crear cuenta).
     @PostMapping("/auth/registro")
-    public ResponseEntity<UsuarioPerfilDTO> registro(@RequestBody UsuarioRespuestaDTO dto) {
+    public ResponseEntity<UsuarioLoginDTO> registro(@RequestBody UsuarioRespuestaDTO dto) {
         return ResponseEntity.status(HttpStatus.CREATED).body(usuarioService.registrar(dto));
     }
 
-    // Da de alta la cuenta del usuario recién registrado (numCuenta debe empezar por "ES")
+    // Asocia una cuenta bancaria al usuario recién registrado (requiere JWT del paso 1).
     @PostMapping("/auth/registro/cuenta")
-    public ResponseEntity<UsuarioPerfilDTO> registrarCuenta(@RequestBody Map<String, String> body) {
-        String username = body.get("username");
+    public ResponseEntity<UsuarioPerfilDTO> registrarCuenta(
+            Authentication auth,
+            @RequestBody Map<String, String> body) {
         String numCuenta = body.get("numCuenta");
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(usuarioService.registrarCuenta(username, numCuenta));
+                .body(usuarioService.registrarCuenta(auth.getName(), numCuenta));
     }
 
-    // Autentifica al usuario y devuelve un JWT.
+    // Autentica al usuario y devuelve un JWT.
     @PostMapping("/auth/login")
     public ResponseEntity<UsuarioLoginDTO> login(@RequestBody UsuarioLoginDTO dto) {
         return ResponseEntity.ok(usuarioService.login(dto));

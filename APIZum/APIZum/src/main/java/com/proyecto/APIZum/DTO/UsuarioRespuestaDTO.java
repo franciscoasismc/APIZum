@@ -8,6 +8,8 @@ public class UsuarioRespuestaDTO {
     private String password;
     private String repetirPassword;
 
+    public UsuarioRespuestaDTO() {}
+
     public UsuarioRespuestaDTO(String username, String nombre, String apellidos,
                                 String email, String password, String repetirPassword) {
         this.username = username;

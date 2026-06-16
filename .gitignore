@@ -31,6 +31,10 @@ desktop.ini
 *.log
 logs/
 
+# ── Claves RSA (SECRETOS — nunca subir al repositorio) ────────────
+APIZum/APIZum/src/main/resources/certs/
+APIZum/APIZum/build/resources/main/certs/
+
 # ── Variables de entorno (nunca subir credenciales) ───────────────
 .env
 .env.local

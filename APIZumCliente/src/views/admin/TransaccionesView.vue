@@ -2,9 +2,9 @@
   <!-- Bloque: listado de transacciones (admin) con filtros -->
   <div class="page">
     <NavBar />
-    <div class="page__content">
+    <main class="page__content">
       <div class="trans-list">
-        <h2 class="trans-list__header">TRANSACCIONES</h2>
+        <h1 class="trans-list__header">TRANSACCIONES</h1>
         <div v-if="error" class="alert alert--error">{{ error }}</div>
 
         <!-- Elemento: filtros de búsqueda -->
@@ -46,10 +46,8 @@
           </div>
         </div>
       </div>
-    </div>
+    </main>
 
-
-    <!-- Componente: pie de página con redes sociales -->
     <Footer />
   </div>
 </template>

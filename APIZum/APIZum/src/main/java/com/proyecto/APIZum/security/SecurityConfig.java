@@ -110,30 +110,52 @@ public class SecurityConfig {
                         // Preflight CORS: OPTIONS siempre permitido
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
-                        // Públicos
+                        // Swagger UI / OpenAPI docs (solo desarrollo)
+                        .requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
+
+                        // Públicos — solo login y registro inicial (paso 1)
                         .requestMatchers(HttpMethod.POST, "/auth/login").permitAll()
                         .requestMatchers(HttpMethod.POST, "/auth/registro").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/auth/registro/cuenta").permitAll()
+                        // /auth/registro/cuenta requiere el JWT emitido en el paso 1
 
                         // USER: Perfil
                         .requestMatchers(HttpMethod.GET, "/usuarios/").hasRole("USER")
                         .requestMatchers(HttpMethod.PUT, "/usuarios/").hasRole("USER")
+                        // Buscar destinatario por email
+                        .requestMatchers(HttpMethod.GET, "/usuarios/buscar").hasRole("USER")
+                        // Paso 2 del registro: asociar cuenta bancaria (requiere JWT)
+                        .requestMatchers(HttpMethod.POST, "/auth/registro/cuenta").hasRole("USER")
 
-                        // USER: Cuentas
+                        // USER: Cuentas (solo lectura; el saldo solo cambia mediante transacciones)
                         .requestMatchers(HttpMethod.GET, "/cuentas/").hasRole("USER")
-                        .requestMatchers(HttpMethod.PUT, "/cuentas/").hasRole("USER")
 
                         // USER: Transacciones
                         .requestMatchers(HttpMethod.POST, "/transacciones/").hasRole("USER")
                         .requestMatchers(HttpMethod.GET, "/transacciones/").hasRole("USER")
 
-                        // ADMIN: Usuarios
-                        .requestMatchers(HttpMethod.GET, "/usuarios/*").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.PUT, "/usuarios/*").hasRole("ADMIN")
+                        // USER: Contactos y solicitudes
+                        .requestMatchers(HttpMethod.GET,    "/contactos/**").hasRole("USER")
+                        .requestMatchers(HttpMethod.POST,   "/contactos/**").hasRole("USER")
+                        .requestMatchers(HttpMethod.PUT,    "/contactos/**").hasRole("USER")
+                        .requestMatchers(HttpMethod.DELETE, "/contactos/**").hasRole("USER")
+                        .requestMatchers(HttpMethod.GET,    "/solicitudes/**").hasRole("USER")
+                        .requestMatchers(HttpMethod.POST,   "/solicitudes/**").hasRole("USER")
+                        .requestMatchers(HttpMethod.PUT,    "/solicitudes/**").hasRole("USER")
+
+                        // USER: Notificaciones
+                        .requestMatchers(HttpMethod.GET,  "/notificaciones/**").hasRole("USER")
+                        .requestMatchers(HttpMethod.PUT,  "/notificaciones/**").hasRole("USER")
+
+                        // ADMIN: Usuarios (lista + detalle + edición + soft-delete)
+                        .requestMatchers(HttpMethod.GET,    "/usuarios").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.GET,    "/usuarios/*").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT,    "/usuarios/*").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/usuarios/*").hasRole("ADMIN")
 
-                        // ADMIN: Cuentas
+                        // ADMIN: Cuentas (solo lectura; edición de saldo eliminada por seguridad)
                         .requestMatchers(HttpMethod.GET, "/cuentas/*").hasRole("ADMIN")
+                        // Excepción: el admin SÍ puede actualizar saldo directamente
+                        .requestMatchers(HttpMethod.PUT, "/cuentas/*").hasRole("ADMIN")
 
                         // ADMIN: Transacciones
                         .requestMatchers(HttpMethod.GET, "/transacciones/usuario/*").hasRole("ADMIN")

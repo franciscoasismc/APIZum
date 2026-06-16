@@ -4,10 +4,7 @@ package com.proyecto.APIZum.service;
 //  Gestiona la lógica de negocio
 // ================================
 
-import com.proyecto.APIZum.DTO.AdminActualizarDTO;
-import com.proyecto.APIZum.DTO.UsuarioLoginDTO;
-import com.proyecto.APIZum.DTO.UsuarioPerfilDTO;
-import com.proyecto.APIZum.DTO.UsuarioRespuestaDTO;
+import com.proyecto.APIZum.DTO.*;
 import com.proyecto.APIZum.error.excepciones.EntidadImprocesableException;
 import com.proyecto.APIZum.error.excepciones.NoEncontradoException;
 import com.proyecto.APIZum.error.excepciones.PeticionIncorrectaException;
@@ -15,8 +12,11 @@ import com.proyecto.APIZum.model.Cuenta;
 import com.proyecto.APIZum.model.Usuario;
 import com.proyecto.APIZum.repository.CuentaRepository;
 import com.proyecto.APIZum.repository.UsuarioRepository;
+import com.proyecto.APIZum.util.IBANValidator;
 import jakarta.transaction.Transactional;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -62,25 +62,43 @@ public class UsuarioService implements UserDetailsService {
         return mapPerfil(buscarUsuario(auth.getName()));
     }
 
-    //Actualiza los datos del usuario autenticado.
+    // Actualiza los datos del usuario autenticado.
     @Transactional
     public UsuarioPerfilDTO actualizarPerfil(Authentication auth, UsuarioRespuestaDTO dto) {
         Usuario usuario = buscarUsuario(auth.getName());
-        usuario.setNombre(dto.getNombre());
-        usuario.setApellidos(dto.getApellidos());
-        validarEmail(dto.getEmail());
-        validarEmailUnico(dto.getEmail(), usuario.getUsername());
-        usuario.setEmail(dto.getEmail());
-        validarPassword(dto.getPassword());
-        validarPasswordsCoinciden(dto.getPassword(), dto.getRepetirPassword());
-        usuario.setPassword(passwordEncoder.encode(dto.getPassword()));
+        if (dto.getNombre() != null && !dto.getNombre().isBlank()) usuario.setNombre(dto.getNombre());
+        if (dto.getApellidos() != null) usuario.setApellidos(dto.getApellidos());
+        if (dto.getEmail() != null && !dto.getEmail().isBlank()) {
+            validarEmail(dto.getEmail());
+            validarEmailUnico(dto.getEmail(), usuario.getUsername());
+            usuario.setEmail(dto.getEmail());
+        }
+        // Password solo se actualiza si se proporciona
+        if (dto.getPassword() != null && !dto.getPassword().isBlank()) {
+            validarPassword(dto.getPassword());
+            validarPasswordsCoinciden(dto.getPassword(), dto.getRepetirPassword());
+            usuario.setPassword(passwordEncoder.encode(dto.getPassword()));
+        }
         return mapPerfil(usuario);
+    }
+
+    // Busca un usuario por email y devuelve solo datos públicos (para buscar destinatario).
+    public UsuarioResumenDTO buscarPorEmail(String email) {
+        Cuenta cuenta = cuentaRepository.findByUsuarioEmail(email)
+                .orElseThrow(() -> new NoEncontradoException("No se encontró ningún usuario con ese email"));
+        Usuario u = cuenta.getUsuario();
+        return new UsuarioResumenDTO(u.getUsername(), u.getNombre(), u.getApellidos(), cuenta.getNumCuenta());
     }
 
 
     // ======================
     // ADMIN
     // ======================
+
+    // Lista todos los usuarios activos con paginación.
+    public Page<UsuarioPerfilDTO> listarUsuarios(Pageable pageable) {
+        return usuarioRepository.findAllByActivoTrue(pageable).map(this::mapPerfil);
+    }
 
     // Ver cualquier usuario por username.
     public UsuarioPerfilDTO verUsuario(String username) {
@@ -107,13 +125,13 @@ public class UsuarioService implements UserDetailsService {
         return mapPerfil(usuario);
     }
 
-    // Elimina un usuario por su username.
+    // Soft delete: desactiva el usuario en lugar de eliminarlo físicamente.
+    // En sistemas financieros el historial nunca se borra.
     @Transactional
     public void eliminarUsuario(String username) {
-        if (!usuarioRepository.existsById(username)) {
-            throw new NoEncontradoException("Usuario no encontrado: " + username);
-        }
-        usuarioRepository.deleteById(username);
+        Usuario usuario = usuarioRepository.findById(username)
+                .orElseThrow(() -> new NoEncontradoException("Usuario no encontrado: " + username));
+        usuario.setActivo(false);
     }
 
 
@@ -121,15 +139,17 @@ public class UsuarioService implements UserDetailsService {
     // AUTH
     // ======================
 
-    // Registra un nuevo usuario sin cuenta asociada.
+    // Registra un nuevo usuario sin cuenta asociada y devuelve un JWT temporal
+    // para que el frontend pueda completar el paso 2 (crear cuenta) de forma autenticada.
     @Transactional
-    public UsuarioPerfilDTO registrar(UsuarioRespuestaDTO dto) {
+    public UsuarioLoginDTO registrar(UsuarioRespuestaDTO dto) {
         validarUsername(dto.getUsername());
-        if (usuarioRepository.existsById(dto.getUsername())) {
+        if (usuarioRepository.existsByUsernameAndActivoTrue(dto.getUsername()) ||
+            usuarioRepository.existsById(dto.getUsername())) {
             throw new EntidadImprocesableException("El username ya está en uso: " + dto.getUsername());
         }
         validarEmail(dto.getEmail());
-        if (usuarioRepository.findByEmail(dto.getEmail()).isPresent()) {
+        if (usuarioRepository.findByEmailAndActivoTrue(dto.getEmail()).isPresent()) {
             throw new EntidadImprocesableException("El email ya está en uso: " + dto.getEmail());
         }
         validarPassword(dto.getPassword());
@@ -141,10 +161,19 @@ public class UsuarioService implements UserDetailsService {
         usuario.setEmail(dto.getEmail());
         usuario.setPassword(passwordEncoder.encode(dto.getPassword()));
         usuario.setRol("USER");
-        return mapPerfil(usuarioRepository.save(usuario));
+        usuario.setActivo(true);
+        usuarioRepository.save(usuario);
+
+        // Emitir JWT para que el paso 2 (crear cuenta) sea autenticado
+        Authentication auth = new UsernamePasswordAuthenticationToken(
+                usuario.getUsername(), null,
+                List.of(new SimpleGrantedAuthority("ROLE_USER"))
+        );
+        String token = tokenService.generateToken(auth);
+        return new UsuarioLoginDTO(token, usuario.getUsername(), null);
     }
 
-    // Crea y asocia una cuenta a un usuario ya registrado.
+    // Crea y asocia una cuenta a un usuario ya registrado (requiere JWT del paso 1).
     @Transactional
     public UsuarioPerfilDTO registrarCuenta(String username, String numCuenta) {
         Usuario usuario = buscarUsuario(username);
@@ -175,12 +204,11 @@ public class UsuarioService implements UserDetailsService {
     // UserDetailsService
     // ======================
 
-    /* Spring Security llama a este método automáticamente al autenticar en el login.
-       Carga el usuario de la BD y construye el objeto UserDetails con su rol. */
+    // Solo usuarios activos pueden autenticarse (soft delete).
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        Usuario usuario = usuarioRepository.findById(username)
-                .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado: " + username));
+        Usuario usuario = usuarioRepository.findByUsernameAndActivoTrue(username)
+                .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado o inactivo: " + username));
         return new User(
                 usuario.getUsername(),
                 usuario.getPassword(),
@@ -193,21 +221,18 @@ public class UsuarioService implements UserDetailsService {
     // Validaciones
     // ======================
 
-    // username: exactamente 9 dígitos numéricos
     private void validarUsername(String username) {
         if (username == null || !username.matches("\\d{9}")) {
             throw new PeticionIncorrectaException("El username debe tener exactamente 9 dígitos numéricos");
         }
     }
 
-    // email: debe contener @ y terminar en .com o .es
     private void validarEmail(String email) {
         if (email == null || !email.matches("^[^@]+@[^@]+\\.(com|es)$")) {
             throw new PeticionIncorrectaException("El email debe contener @ y terminar en .com o .es");
         }
     }
 
-    //  email: no puede estar ya en uso por otro usuario
     private void validarEmailUnico(String email, String usernameActual) {
         usuarioRepository.findByEmail(email).ifPresent(u -> {
             if (!u.getUsername().equals(usernameActual)) {
@@ -216,31 +241,29 @@ public class UsuarioService implements UserDetailsService {
         });
     }
 
-    // password: entre 8 y 20 caracteres alfanuméricos
     private void validarPassword(String password) {
         if (password == null || !password.matches("^[a-zA-Z0-9]{8,20}$")) {
             throw new PeticionIncorrectaException("La password debe tener entre 8 y 20 caracteres alfanuméricos");
         }
     }
 
-    // password y repetirPassword deben coincidir exactamente
     private void validarPasswordsCoinciden(String password, String repetirPassword) {
         if (password == null || !password.equals(repetirPassword)) {
             throw new PeticionIncorrectaException("Las passwords no coinciden");
         }
     }
 
-    // rol: solo puede ser USER o ADMIN
     private void validarRol(String rol) {
         if (rol == null || (!rol.equalsIgnoreCase("USER") && !rol.equalsIgnoreCase("ADMIN"))) {
             throw new PeticionIncorrectaException("El rol solo puede ser USER o ADMIN");
         }
     }
 
-    // numCuenta: debe empezar por "ES"
+    // Validación IBAN completa según ISO 13616
     private void validarNumCuenta(String numCuenta) {
-        if (numCuenta == null || !numCuenta.startsWith("ES")) {
-            throw new PeticionIncorrectaException("El número de cuenta debe empezar por ES");
+        if (!IBANValidator.isValidSpanish(numCuenta)) {
+            throw new PeticionIncorrectaException(
+                "El número de cuenta debe ser un IBAN español válido (ES + 22 dígitos, verificado según ISO 13616)");
         }
     }
 
@@ -250,7 +273,7 @@ public class UsuarioService implements UserDetailsService {
     // ======================
 
     private Usuario buscarUsuario(String username) {
-        return usuarioRepository.findById(username)
+        return usuarioRepository.findByUsernameAndActivoTrue(username)
                 .orElseThrow(() -> new NoEncontradoException("Usuario no encontrado: " + username));
     }
 
@@ -259,7 +282,6 @@ public class UsuarioService implements UserDetailsService {
     // Mapeos
     // ======================
 
-    // Vista unificada para USER y ADMIN:
     private UsuarioPerfilDTO mapPerfil(Usuario u) {
         return new UsuarioPerfilDTO(
                 u.getUsername(),
@@ -267,7 +289,7 @@ public class UsuarioService implements UserDetailsService {
                 u.getApellidos(),
                 u.getEmail(),
                 u.getRol(),
-                null,         // password nunca se expone
+                null,       // password nunca se expone
                 u.getCuenta()
         );
     }

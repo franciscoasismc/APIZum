@@ -7,6 +7,7 @@ package com.proyecto.APIZum.controller;
 import com.proyecto.APIZum.DTO.TransaccionRespuestaDTO;
 import com.proyecto.APIZum.DTO.TransaccionVerDTO;
 import com.proyecto.APIZum.service.TransaccionService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
@@ -18,6 +19,7 @@ import org.springframework.web.bind.annotation.*;
 import java.math.BigDecimal;
 import java.util.Map;
 
+@Tag(name = "Transacciones", description = "Historial y realización de transferencias monetarias")
 @RestController
 public class TransaccionController {
 

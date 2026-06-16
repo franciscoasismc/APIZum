@@ -2,9 +2,9 @@
   <!-- Bloque: vista de búsqueda de usuarios (admin) -->
   <div class="page">
     <NavBar />
-    <div class="page__content">
+    <main class="page__content">
       <div class="trans-list">
-        <h2 class="trans-list__header">USUARIOS</h2>
+        <h1 class="trans-list__header">USUARIOS</h1>
 
         <div v-if="error" class="alert alert--error">{{ error }}</div>
 
@@ -41,10 +41,8 @@
           No se encontró ningún usuario con ese username.
         </div>
       </div>
-    </div>
+    </main>
 
-
-    <!-- Componente: pie de página con redes sociales -->
     <Footer />
   </div>
 </template>

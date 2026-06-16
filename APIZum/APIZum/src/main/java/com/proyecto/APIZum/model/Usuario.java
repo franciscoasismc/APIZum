@@ -33,6 +33,10 @@ public class Usuario {
     @Column(nullable = false)
     private String rol = "USER";
 
+    // Soft delete: los usuarios nunca se eliminan físicamente en un sistema financiero.
+    @Column(nullable = false)
+    private boolean activo = true;
+
     /* Relación 1:1
         Las operaciones sobre Usuario se propagan a Cuenta y se
         eliminan de la base de datos.
@@ -55,6 +59,7 @@ public class Usuario {
         this.password = password;
         this.rol = (rol == null || rol.isBlank()) ? "USER" : rol.toUpperCase();
         this.cuenta = cuenta;
+        this.activo = true;
     }
 
 
@@ -80,6 +85,9 @@ public class Usuario {
 
     public String getRol(){ return rol; }
     public void setRol(String rol){ this.rol = rol; }
+
+    public boolean isActivo(){ return activo; }
+    public void setActivo(boolean activo){ this.activo = activo; }
 
     public Cuenta getCuenta(){ return cuenta; }
     public void setCuenta(Cuenta cuenta){ this.cuenta = cuenta; }

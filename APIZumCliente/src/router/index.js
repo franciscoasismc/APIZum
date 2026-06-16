@@ -16,11 +16,20 @@ import InicioView            from '../views/InicioView.vue'
 import LoginView             from '../views/LoginView.vue'
 import RegistroView          from '../views/RegistroView.vue'
 
+// Vistas footer (páginas estáticas)
+import SobreNosotrosView     from '../views/SobreNosotrosView.vue'
+import ContactoView          from '../views/ContactoView.vue'
+import AvisoLegalView        from '../views/AvisoLegalView.vue'
+import PrivacidadView        from '../views/PrivacidadView.vue'
+
 // Vistas de usuario autenticado (rol USER)
 import PerfilView            from '../views/usuario/PerfilView.vue'
 import CuentaView            from '../views/usuario/CuentaView.vue'
 import TransaccionesView     from '../views/usuario/TransaccionesView.vue'
 import NuevaTransaccionView  from '../views/usuario/NuevaTransaccionView.vue'
+import ContactosView         from '../views/usuario/ContactosView.vue'
+import SolicitudesView       from '../views/usuario/SolicitudesView.vue'
+import NotificacionesView    from '../views/usuario/NotificacionesView.vue'
 
 // Vistas de administrador (rol ADMIN)
 import AdminUsuariosView     from '../views/admin/UsuariosView.vue'
@@ -35,11 +44,20 @@ const routes = [
   { path: '/login',                    component: LoginView },
   { path: '/registro',                 component: RegistroView },
 
+  // Rutas páginas estáticas (footer)
+  { path: '/sobre-nosotros',           component: SobreNosotrosView },
+  { path: '/contacto',                 component: ContactoView },
+  { path: '/aviso-legal',             component: AvisoLegalView },
+  { path: '/privacidad',               component: PrivacidadView },
+
   // Rutas de usuario autenticado
   { path: '/perfil',                   component: PerfilView,           meta: { requiresAuth: true } },
   { path: '/cuenta',                   component: CuentaView,           meta: { requiresAuth: true } },
   { path: '/transacciones',            component: TransaccionesView,    meta: { requiresAuth: true } },
   { path: '/transacciones/nueva',      component: NuevaTransaccionView, meta: { requiresAuth: true } },
+  { path: '/contactos',                component: ContactosView,        meta: { requiresAuth: true } },
+  { path: '/solicitudes',              component: SolicitudesView,      meta: { requiresAuth: true } },
+  { path: '/notificaciones',           component: NotificacionesView,   meta: { requiresAuth: true } },
 
   // Rutas de administrador
   { path: '/admin/usuarios',           component: AdminUsuariosView,    meta: { requiresAdmin: true } },

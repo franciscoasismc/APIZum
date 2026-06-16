@@ -2,9 +2,9 @@
   <!-- Bloque: detalle de usuario (admin) -->
   <div class="page">
     <NavBar />
-    <div class="page__content">
+    <main class="page__content">
       <div class="card card--wide">
-        <h2 class="card__header">DATOS DEL USUARIO</h2>
+        <h1 class="card__header">DATOS DEL USUARIO</h1>
         <div v-if="error"   class="alert alert--error">{{ error }}</div>
         <div v-if="success" class="alert alert--success">{{ success }}</div>
 
@@ -82,10 +82,8 @@
           </div>
         </div>
       </div>
-    </div>
+    </main>
 
-
-    <!-- Componente: pie de página con redes sociales -->
     <Footer />
   </div>
 </template>

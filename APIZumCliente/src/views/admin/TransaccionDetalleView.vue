@@ -2,9 +2,9 @@
   <!-- Bloque: detalle de transacción (admin) -->
   <div class="page">
     <NavBar />
-    <div class="page__content">
+    <main class="page__content">
       <div class="card card--wide">
-        <h2 class="card__header">DATOS DE LA TRANSACCIÓN</h2>
+        <h1 class="card__header">DATOS DE LA TRANSACCIÓN</h1>
         <div v-if="error" class="alert alert--error">{{ error }}</div>
 
         <div class="card__info"><span>ID</span>{{ trans.idTransaccion }}</div>
@@ -36,10 +36,8 @@
           </button>
         </div>
       </div>
-    </div>
+    </main>
 
-
-    <!-- Componente: pie de página con redes sociales -->
     <Footer />
   </div>
 </template>

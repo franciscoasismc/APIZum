@@ -7,6 +7,7 @@ package com.proyecto.APIZum.controller;
 import com.proyecto.APIZum.DTO.CuentaRespuestaDTO;
 import com.proyecto.APIZum.DTO.CuentaVerDTO;
 import com.proyecto.APIZum.service.CuentaService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 import java.math.BigDecimal;
 import java.util.Map;
 
+@Tag(name = "Cuentas", description = "Consulta y gestión de cuentas bancarias")
 @RestController
 public class CuentaController {
 
