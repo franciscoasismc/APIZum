@@ -45,7 +45,9 @@ jobs:
 
       - name: Ejecutar tests (perfil test → H2, sin MySQL)
         working-directory: APIZum/APIZum
-        run: bash gradlew test --no-daemon
+        run: |
+          chmod +x gradlew
+          bash gradlew test --no-daemon
         # Los tests usan application-test.properties con H2 en memoria
 
       - name: Publicar informe de tests
