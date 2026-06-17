@@ -9,18 +9,22 @@
         <div v-if="error" class="alert alert--error">{{ error }}</div>
 
         <div class="card__field">
-          <label for="reg-username" class="card__label">USERNAME <span aria-hidden="true" style="color:var(--color-danger)">*</span></label>
+          <label for="reg-username" class="card__label">USERNAME (9 dígitos) <span aria-hidden="true" style="color:var(--color-danger)">*</span></label>
           <input
             id="reg-username"
             v-model="form.username"
             type="text"
             class="card__input"
-            placeholder="usuario123"
+            maxlength="9"
+            placeholder="123456789"
             @blur="tocar('username')"
-            :class="{ 'input--error': tocado.username && !form.username.trim() }"
+            :class="{ 'input--error': tocado.username && !usernameValido }"
           />
           <span v-if="tocado.username && !form.username.trim()" class="field-error" role="alert">
             El username es obligatorio.
+          </span>
+          <span v-else-if="tocado.username && form.username.trim() && !usernameValido" class="field-error" role="alert">
+            El username debe tener exactamente 9 dígitos numéricos.
           </span>
         </div>
 
@@ -177,6 +181,7 @@ const tocado = reactive({
 })
 
 const emailValido    = computed(() => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email))
+const usernameValido = computed(() => /^\d{9}$/.test(form.username))
 // Validación IBAN completa (ISO 13616 — módulo 97)
 function validarIBAN(iban) {
   const s = iban.replace(/\s/g, '').toUpperCase()
@@ -195,7 +200,7 @@ function tocar(campo) { tocado[campo] = true }
 
 function paso1Valido() {
   return (
-    form.username.trim() &&
+    usernameValido.value &&
     form.nombre.trim() &&
     emailValido.value &&
     form.password &&
