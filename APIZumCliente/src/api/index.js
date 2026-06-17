@@ -4,6 +4,7 @@
  */
 
 import axios from 'axios'
+import { authStore } from '../stores/auth'
 
 const api = axios.create({ baseURL: import.meta.env.VITE_API_URL || '/api' })
 
@@ -12,6 +13,18 @@ api.interceptors.request.use(config => {
   if (token) config.headers.Authorization = `Bearer ${token}`
   return config
 })
+
+// Si el backend devuelve 401 (token inválido o expirado), cerrar sesión y redirigir al login
+api.interceptors.response.use(
+  res => res,
+  err => {
+    if (err.response?.status === 401) {
+      authStore.logout()
+      window.location.href = '/login'
+    }
+    return Promise.reject(err)
+  }
+)
 
 
 // AUTH

@@ -16,6 +16,7 @@
           <div class="card__info"><span>EMAIL</span>{{ perfil.email }}</div>
           <div class="card__info"><span>ROL</span>{{ perfil.rol }}</div>
           <div class="card__info"><span>CUENTA</span>{{ perfil.numCuenta?.numCuenta || '—' }}</div>
+          <div class="card__info"><span>SALDO</span>{{ perfil.numCuenta ? perfil.numCuenta.saldo + ' €' : '—' }}</div>
           <div class="card__actions">
             <button class="card__btn card__btn--accept" @click="startEditar">ACTUALIZAR</button>
           </div>

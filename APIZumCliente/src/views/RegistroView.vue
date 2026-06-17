@@ -141,7 +141,7 @@
             El número de cuenta es obligatorio.
           </span>
           <span v-else-if="tocadoCuenta && numCuenta.trim() && !numCuentaValido" class="field-error" role="alert">
-            El número de cuenta debe empezar por ES.
+            Formato IBAN no válido. Introduce un IBAN español válido (ej: ES9121000418450200051332).
           </span>
         </div>
 
