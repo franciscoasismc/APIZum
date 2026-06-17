@@ -40,11 +40,13 @@ COPY --from=build /app/build/libs/*.jar app.jar
 # Puerto en el que escucha Spring Boot
 EXPOSE 8081
 
-# Variables de entorno con valores por defecto (sobreescribibles en Render/Docker)
+# Variables de entorno con valores por defecto para docker-compose local
+# En Render/producción se sobreescriben desde el dashboard
 ENV SPRING_DATASOURCE_URL=jdbc:mysql://db:3306/apizumbd \
     SPRING_DATASOURCE_USERNAME=root \
     SPRING_DATASOURCE_PASSWORD=rootpassword \
-    SPRING_JPA_HIBERNATE_DDL_AUTO=update
+    SPRING_JPA_HIBERNATE_DDL_AUTO=update \
+    CORS_ALLOWED_ORIGINS=http://localhost:5173
 
 # Arrancamos la aplicación
 ENTRYPOINT ["java", "-jar", "app.jar"]
