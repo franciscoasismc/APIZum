@@ -556,6 +556,33 @@ VITE_API_URL = https://apizum.onrender.com
 
 ---
 
+## 👤 USUARIOS PRECARGADOS
+
+Al arrancar la aplicación se crean automáticamente los siguientes usuarios si no existen ya en la base de datos.
+
+### 🔑 Administrador
+
+| Campo    | Valor           |
+|:--------:|:----------------|
+| Username | `000000000`     |
+| Password | `administrador` |
+| Rol      | `ADMIN`         |
+| Email    | `admin@apizum.es` |
+| Cuenta   | Sin cuenta      |
+
+### 🧪 Usuarios de prueba
+
+| Username    | Password    | Nombre        | Apellidos | Email               | ROL  | IBAN                       | Saldo inicial |
+|:-----------:|:-----------:|:-------------:|:---------:|:-------------------:|:----:|:--------------------------:|:-------------:|
+| `111111111` | `usutest01` | Usuario       | Uno       | `uno@pruebas.com`   | USER | `ES6300010001000111111111` | 1.000 €       |
+| `222222222` | `usutest02` | Usuario       | Dos       | `dos@pruebas.com`   | USER | `ES4400020002000222222222` | 1.000 €       |
+| `333333333` | `usutest03` | Usuario       | Tres      | `tres@pruebas.com`  | USER | `ES2500030003000333333333` | 1.000 €       |
+
+> Los IBANs son válidos según ISO 13616 (mod 97).  
+> Los datos se crean una sola vez — si ya existen en la BD no se tocan.
+
+---
+
 ## 🔬 PRUEBAS CON CURL
 
 ```bash
