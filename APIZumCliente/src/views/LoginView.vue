@@ -14,7 +14,7 @@
             v-model="form.username"
             type="text"
             class="card__input"
-            placeholder="123456789"
+            placeholder="usuario123"
             autocomplete="username"
             @blur="tocar('username')"
             :class="{ 'input--error': tocado.username && !form.username.trim() }"

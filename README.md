@@ -515,43 +515,44 @@ Settings → Secrets → Actions:
 
 ---
 
-## 🌐 DESPLIEGUE EN PRODUCCIÓN (Railway)
+## 🌐 DESPLIEGUE EN PRODUCCIÓN (Render)
 
 **URLs públicas:**
-- Frontend → https://honest-adventure-production-25a3.up.railway.app
-- Backend  → https://apizum-production.up.railway.app
-- Swagger UI → https://apizum-production.up.railway.app/swagger-ui.html
+- Frontend  → https://apizum-frontend.onrender.com
+- Backend   → https://apizum.onrender.com
+- Swagger UI → https://apizum.onrender.com/swagger-ui.html
 
-### Servicios en Railway
+> ℹ️ El plan gratuito de Render duerme los servicios tras 15 minutos de inactividad. La primera petición puede tardar ~30-60 segundos en responder mientras el servicio arranca.
 
-| Servicio | Imagen Docker Hub | Puerto interno |
-|:---------|:------------------|:--------------:|
-| Backend  | `fmuncar/apizum-backend:latest` | 8081 |
-| Frontend | `fmuncar/apizum-frontend:latest` | 80 |
-| Base de datos | Plugin MySQL de Railway | 3306 |
+### Servicios en Render
 
-### Variables de entorno en Railway
+| Servicio | Fuente | Puerto |
+|:---------|:-------|:------:|
+| Backend  | GitHub → Dockerfile (`APIZum/APIZum`) | 8081 |
+| Frontend | GitHub → Dockerfile (`APIZumCliente`) | 80 |
+| Base de datos | Aiven MySQL (free tier) | 24368 |
+
+### Variables de entorno en Render
 
 **Backend:**
 ```
-SPRING_DATASOURCE_URL       → proporcionada por el plugin MySQL
-SPRING_DATASOURCE_USERNAME  → proporcionada por el plugin MySQL
-SPRING_DATASOURCE_PASSWORD  → proporcionada por el plugin MySQL
-SPRING_JPA_HIBERNATE_DDL_AUTO=update
-CORS_ALLOWED_ORIGINS=https://honest-adventure-production-25a3.up.railway.app
+SPRING_DATASOURCE_URL      = jdbc:mysql://<host>:<puerto>/defaultdb?sslMode=REQUIRED
+SPRING_DATASOURCE_USERNAME = avnadmin
+SPRING_DATASOURCE_PASSWORD = <password de Aiven>
+SPRING_JPA_HIBERNATE_DDL_AUTO = update
+CORS_ALLOWED_ORIGINS       = https://apizum-frontend.onrender.com
+SERVER_PORT                = 8081
 ```
 
 **Frontend:**
 ```
-VITE_API_URL=https://apizum-production.up.railway.app
+VITE_API_URL = https://apizum.onrender.com
 ```
 
 ### Proceso de publicación
 
 1. `git push origin main` → el CI pasa los tests y sube las imágenes a Docker Hub automáticamente.
-2. En Railway → servicio → **Deploy** → **Redeploy**.
-
-> ℹ️ El backend puede estar pausado en el plan gratuito de Railway. Reanúdalo desde el dashboard si no responde.
+2. Render detecta el push y redespliega ambos servicios automáticamente (Auto-Deploy activado).
 
 ---
 
@@ -559,7 +560,7 @@ VITE_API_URL=https://apizum-production.up.railway.app
 
 ```bash
 BASE=http://localhost:8081
-# Para producción: BASE=https://apizum-production.up.railway.app
+# Para producción: BASE=https://apizum.onrender.com
 ```
 
 ```bash
@@ -639,10 +640,10 @@ docs(readme): añadir sección CI/CD
 → El token del paso 1 no se está enviando en el header `Authorization: Bearer <token>`.
 
 **Frontend muestra "Error al cargar" en producción**  
-→ El backend de Railway está pausado. Reanudarlo desde el dashboard.
+→ El backend de Render está dormido (plan gratuito). Esperar ~30-60 segundos y recargar.
 
 **Error CORS en el navegador**  
-→ Añadir el origen a `CORS_ALLOWED_ORIGINS` en `application.properties` o en Railway.
+→ Añadir el origen a `CORS_ALLOWED_ORIGINS` en las variables de entorno de Render.
 
 **Contenedor con nombre ya en uso al hacer `docker compose up`**  
 → Ejecutar `docker rm -f apizum-db apizum-backend apizum-frontend` y volver a intentarlo.

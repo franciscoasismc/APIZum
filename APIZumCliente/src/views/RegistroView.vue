@@ -9,14 +9,13 @@
         <div v-if="error" class="alert alert--error">{{ error }}</div>
 
         <div class="card__field">
-          <label for="reg-username" class="card__label">USERNAME (9 dígitos) <span aria-hidden="true" style="color:var(--color-danger)">*</span></label>
+          <label for="reg-username" class="card__label">USERNAME <span aria-hidden="true" style="color:var(--color-danger)">*</span></label>
           <input
             id="reg-username"
             v-model="form.username"
             type="text"
             class="card__input"
-            maxlength="9"
-            placeholder="123456789"
+            placeholder="usuario123"
             @blur="tocar('username')"
             :class="{ 'input--error': tocado.username && !form.username.trim() }"
           />
@@ -41,18 +40,13 @@
         </div>
 
         <div class="card__field">
-          <label for="reg-apellidos" class="card__label">APELLIDOS <span aria-hidden="true" style="color:var(--color-danger)">*</span></label>
+          <label for="reg-apellidos" class="card__label">APELLIDOS</label>
           <input
             id="reg-apellidos"
             v-model="form.apellidos"
             type="text"
             class="card__input"
-            @blur="tocar('apellidos')"
-            :class="{ 'input--error': tocado.apellidos && !form.apellidos.trim() }"
           />
-          <span v-if="tocado.apellidos && !form.apellidos.trim()" class="field-error" role="alert">
-            Los apellidos son obligatorios.
-          </span>
         </div>
 
         <div class="card__field">
@@ -203,7 +197,6 @@ function paso1Valido() {
   return (
     form.username.trim() &&
     form.nombre.trim() &&
-    form.apellidos.trim() &&
     emailValido.value &&
     form.password &&
     form.repetirPassword &&
