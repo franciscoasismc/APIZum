@@ -72,17 +72,20 @@
         </div>
 
         <div class="card__field">
-          <label for="reg-password" class="card__label">CONTRASEÑA <span aria-hidden="true" style="color:var(--color-danger)">*</span></label>
+          <label for="reg-password" class="card__label">CONTRASEÑA (8-20 caracteres alfanuméricos) <span aria-hidden="true" style="color:var(--color-danger)">*</span></label>
           <input
             id="reg-password"
             v-model="form.password"
             type="password"
             class="card__input"
             @blur="tocar('password')"
-            :class="{ 'input--error': tocado.password && !form.password }"
+            :class="{ 'input--error': tocado.password && !passwordValida }"
           />
           <span v-if="tocado.password && !form.password" class="field-error" role="alert">
             La contraseña es obligatoria.
+          </span>
+          <span v-else-if="tocado.password && form.password && !passwordValida" class="field-error" role="alert">
+            Debe tener entre 8 y 20 caracteres alfanuméricos.
           </span>
         </div>
 
@@ -182,6 +185,7 @@ const tocado = reactive({
 
 const emailValido    = computed(() => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email))
 const usernameValido = computed(() => /^\d{9}$/.test(form.username))
+const passwordValida = computed(() => /^[a-zA-Z0-9]{8,20}$/.test(form.password))
 // Validación IBAN completa (ISO 13616 — módulo 97)
 function validarIBAN(iban) {
   const s = iban.replace(/\s/g, '').toUpperCase()
@@ -203,7 +207,7 @@ function paso1Valido() {
     usernameValido.value &&
     form.nombre.trim() &&
     emailValido.value &&
-    form.password &&
+    passwordValida.value &&
     form.repetirPassword &&
     form.password === form.repetirPassword
   )
@@ -222,7 +226,7 @@ async function handleRegistro() {
     localStorage.setItem('token', tempToken)
     paso.value = 2
   } catch (e) {
-    error.value = e.response?.data?.error || 'Error al registrar usuario'
+    error.value = e.response?.data?.message || e.response?.data?.error || 'Error al registrar usuario'
   } finally {
     loading.value = false
   }
