@@ -49,4 +49,4 @@ ENV SPRING_DATASOURCE_URL=jdbc:mysql://db:3306/apizumbd \
     CORS_ALLOWED_ORIGINS=http://localhost:5173
 
 # Arrancamos la aplicación
-ENTRYPOINT ["java", "-jar", "app.jar"]
+ENTRYPOINT ["java", "-Xmx256m", "-Xms128m", "-jar", "app.jar"]
